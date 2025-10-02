@@ -17,3 +17,6 @@ pos = {state: (state[1], -state[0]) for state in states}  # layout grid
 nx.draw(G, pos, with_labels=True, node_size=600, node_color="lightblue")
 plt.title("State Space untuk Grid 3x3")
 plt.show()
+
+
+#Contoh agar case yang dipelajari lebih mudah dimengerti.

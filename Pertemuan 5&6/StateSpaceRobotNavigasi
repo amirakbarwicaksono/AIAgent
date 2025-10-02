@@ -31,3 +31,5 @@ nx.draw_networkx_nodes(G, pos, nodelist=[goal], node_color="red", label="Goal")
 plt.legend(["State", "Start", "Goal"])
 plt.title("State Space Representation (3x3 Grid)")
 plt.show()
+
+#Contoh agar case yang dipelajari lebih mudah dimengerti.
