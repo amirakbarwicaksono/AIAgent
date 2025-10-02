@@ -1,0 +1,23 @@
+# Contoh 3: Algoritma Pencarian Linear (Linear Search)
+
+# Algoritma (pseudocode)
+# Masukkan list L dan nilai x yang dicari.
+# Periksa setiap elemen dari kiri ke kanan.
+# Jika elemen = x, kembalikan posisi indeks.
+# Jika semua sudah diperiksa, kembalikan "tidak ditemukan".
+
+def linear_search(L, x):
+    for i in range(len(L)):
+        if L[i] == x:
+            return i  # mengembalikan indeks
+    return -1  # tidak ditemukan
+
+# contoh penggunaan
+data = [10, 23, 45, 70, 11, 15]
+target = 70
+hasil = linear_search(data, target)
+
+if hasil != -1:
+    print(f"Elemen {target} ditemukan di indeks {hasil}")
+else:
+    print(f"Elemen {target} tidak ditemukan")

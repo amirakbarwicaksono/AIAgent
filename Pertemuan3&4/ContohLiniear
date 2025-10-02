@@ -1,0 +1,12 @@
+# Contoh Perbandingan Linear Search vs Binary Search
+
+# Linear Search
+# Ide algoritma: Periksa satu per satu dari awal sampai akhir.
+# Kompleksitas waktu: O(n).
+# Cocok untuk data tidak terurut.
+
+def linear_search(L, x):
+    for i in range(len(L)):
+        if L[i] == x:
+            return i  # indeks ditemukan
+    return -1  # tidak ditemukan

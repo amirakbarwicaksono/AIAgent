@@ -1,0 +1,25 @@
+# Contoh Perbandingan Linear Search vs Binary Search
+
+# Binary Search
+# Ide algoritma:
+# Data harus sudah terurut.
+# Bandingkan elemen tengah dengan target.
+# Jika target lebih kecil, cari di kiri; jika lebih besar, cari di kanan.
+# Ulangi sampai ditemukan atau list habis.
+# Kompleksitas waktu: O(log n).
+# Jauh lebih cepat untuk data besar.
+
+def binary_search(L, x):
+    low = 0
+    high = len(L) - 1
+    
+    while low <= high:
+        mid = (low + high) // 2
+        if L[mid] == x:
+            return mid
+        elif L[mid] < x:
+            low = mid + 1
+        else:
+            high = mid - 1
+    
+    return -1

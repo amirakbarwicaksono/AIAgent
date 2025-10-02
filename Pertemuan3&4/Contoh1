@@ -1,0 +1,25 @@
+# Contoh 1: Algoritma Menghitung Nilai Maksimum dari 3 Angka
+# Algoritma (dalam bentuk langkah)
+
+# Ambil tiga angka: A, B, C.
+# Bandingkan A dengan B, simpan yang terbesar ke variabel max.
+# Bandingkan max dengan C.
+# Nilai terbesar adalah hasil akhir.
+
+
+def cari_maksimum(a, b, c):
+    # langkah 1 dan 2: bandingkan a dengan b
+    if a > b:
+        maks = a
+    else:
+        maks = b
+    
+    # langkah 3: bandingkan maks dengan c
+    if c > maks:
+        maks = c
+    
+    # langkah 4: hasil akhir
+    return maks
+
+# contoh penggunaan
+print("Nilai maksimum:", cari_maksimum(12, 25, 18))

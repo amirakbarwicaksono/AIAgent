@@ -1,0 +1,15 @@
+# Contoh 2: Algoritma Menghitung Faktorial (n!)
+
+# Algoritma (pseudocode)
+# Masukkan bilangan n.
+# Jika n = 0 atau n = 1, maka hasil = 1.
+# Jika tidak, kalikan semua bilangan dari 1 sampai n.
+
+def faktorial(n):
+    hasil = 1
+    for i in range(1, n+1):
+        hasil *= i
+    return hasil
+
+# contoh penggunaan
+print("5! =", faktorial(5))

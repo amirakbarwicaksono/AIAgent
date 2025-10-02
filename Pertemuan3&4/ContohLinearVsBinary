@@ -1,0 +1,39 @@
+def linear_search(L, x):
+    for i in range(len(L)):
+        if L[i] == x:
+            return i  # indeks ditemukan
+    return -1  # tidak ditemukan
+
+def binary_search(L, x):
+    low = 0
+    high = len(L) - 1
+    
+    while low <= high:
+        mid = (low + high) // 2
+        if L[mid] == x:
+            return mid
+        elif L[mid] < x:
+            low = mid + 1
+        else:
+            high = mid - 1
+    
+    return -1
+
+# Dataset
+data = list(range(1, 1000001))  # 1 juta angka terurut
+target = 999999
+
+# Linear Search
+import time
+
+
+start = time.time()
+hasil_linear = linear_search(data, target)
+end = time.time()
+print(f"Linear Search: indeks={hasil_linear}, waktu={end-start:.6f} detik")
+
+# Binary Search
+start = time.time()
+hasil_binary = binary_search(data, target)
+end = time.time()
+print(f"Binary Search: indeks={hasil_binary}, waktu={end-start:.6f} detik")
