@@ -1,0 +1,17 @@
+# Traditional Programming: Proteksi Arus Lebih
+
+def proteksi_arus(arus, batas=40):
+    """
+    Fungsi sederhana untuk proteksi arus lebih.
+    Jika arus lebih besar dari batas, relay diputuskan.
+    """
+    if arus > batas:
+        return "Putuskan relay! (arus berlebih)"
+    else:
+        return "Sistem normal"
+
+# Uji beberapa nilai arus
+arus_terukur = [30, 45, 50, 35]
+
+for a in arus_terukur:
+    print(f"Arus: {a} A -> {proteksi_arus(a)}")
