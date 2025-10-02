@@ -1,0 +1,61 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+from collections import deque
+
+# ---- Definisi Grid 3x3 ----
+rows, cols = 3, 3
+G = nx.Graph()
+
+# Tambahkan node (setiap posisi di grid adalah state)
+for i in range(rows):
+    for j in range(cols):
+        G.add_node((i, j))
+
+# Tambahkan edge (pergerakan robot ke atas, bawah, kiri, kanan)
+moves = [(-1,0), (1,0), (0,-1), (0,1)]
+for i in range(rows):
+    for j in range(cols):
+        for dx, dy in moves:
+            ni, nj = i+dx, j+dy
+            if 0 <= ni < rows and 0 <= nj < cols:
+                G.add_edge((i, j), (ni, nj))
+
+# ---- BFS untuk mencari jalur ----
+def bfs_path(start, goal):
+    queue = deque([(start, [start])])
+    visited = set([start])
+    
+    while queue:
+        (x, y), path = queue.popleft()
+        if (x, y) == goal:
+            return path
+        for dx, dy in moves:
+            nx_, ny_ = x+dx, y+dy
+            if 0 <= nx_ < rows and 0 <= ny_ < cols and (nx_, ny_) not in visited:
+                visited.add((nx_, ny_))
+                queue.append(((nx_, ny_), path + [(nx_, ny_)]))
+    return None
+
+start, goal = (0,0), (2,2)
+path = bfs_path(start, goal)
+
+print("Jalur BFS:", path)
+
+# ---- Visualisasi ----
+pos = { (i,j):(j,-i) for i in range(rows) for j in range(cols) }  # layout grid
+nx.draw(G, pos, with_labels=True, node_color="lightblue", node_size=800, font_size=10, label="State (Posisi Robot)")
+
+# Tandai start & goal
+nx.draw_networkx_nodes(G, pos, nodelist=[start], node_color="green", node_size=900, label="Start (Posisi Awal)")
+nx.draw_networkx_nodes(G, pos, nodelist=[goal], node_color="red", node_size=900, label="Goal (Tujuan)")
+
+# Gambarkan jalur BFS
+if path:
+    edges_path = list(zip(path, path[1:]))
+    nx.draw_networkx_edges(G, pos, edgelist=edges_path, edge_color="blue", width=3, label="Jalur BFS (Terpendek)")
+
+# Tambahkan judul & legend
+plt.title("State Space + Jalur BFS pada Grid 3x3", fontsize=14, fontweight="bold")
+plt.legend(loc="upper left", fontsize=9)
+plt.axis("off")
+plt.show()

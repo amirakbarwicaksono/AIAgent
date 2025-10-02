@@ -1,0 +1,103 @@
+from collections import deque
+import matplotlib.pyplot as plt
+
+# Grid: 0 = bebas, 1 = halangan
+grid = [
+    [0, 0, 0, 0],
+    [0, 1, 0, 1],
+    [0, 0, 0, 0],
+    [0, 1, 1, 0],
+    [0, 0, 0, 0]
+]
+
+start = (0, 0)
+goal = (4, 3)
+moves = [(-1,0), (1,0), (0,-1), (0,1)]  # atas, bawah, kiri, kanan
+
+# -------- DFS (Depth-First Search) --------
+def dfs(grid, start, goal):
+    stack = [(start, [start])]
+    visited = set()
+
+    while stack:
+        (x, y), path = stack.pop()
+        if (x, y) == goal:
+            return path
+
+        if (x, y) in visited:
+            continue
+        visited.add((x, y))
+
+        for dx, dy in moves:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]) and grid[nx][ny] == 0:
+                if (nx, ny) not in visited:
+                    stack.append(((nx, ny), path + [(nx, ny)]))
+    return None
+
+# -------- BFS (Breadth-First Search) --------
+def bfs(grid, start, goal):
+    queue = deque([(start, [start])])
+    visited = set([start])
+
+    while queue:
+        (x, y), path = queue.popleft()
+        if (x, y) == goal:
+            return path
+
+        for dx, dy in moves:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]) and grid[nx][ny] == 0:
+                if (nx, ny) not in visited:
+                    visited.add((nx, ny))
+                    queue.append(((nx, ny), path + [(nx, ny)]))
+    return None
+
+# Jalur dengan DFS dan BFS
+dfs_path = dfs(grid, start, goal)
+bfs_path = bfs(grid, start, goal)
+
+print("Jalur DFS :", dfs_path)
+print("Panjang jalur DFS:", len(dfs_path) if dfs_path else None)
+print("Jalur BFS :", bfs_path)
+print("Panjang jalur BFS:", len(bfs_path) if bfs_path else None)
+
+
+# -------- Visualisasi dengan Matplotlib --------
+def plot_paths(grid, dfs_path, bfs_path, start, goal):
+    nrows, ncols = len(grid), len(grid[0])
+    fig, ax = plt.subplots(figsize=(5,5))
+
+    # Gambar grid
+    for i in range(nrows):
+        for j in range(ncols):
+            if grid[i][j] == 1:  # obstacle
+                ax.add_patch(plt.Rectangle((j, nrows-1-i), 1, 1, color="black"))
+            else:  # jalan
+                ax.add_patch(plt.Rectangle((j, nrows-1-i), 1, 1, fill=False, edgecolor="gray"))
+
+    # Jalur BFS (hijau)
+    if bfs_path:
+        for (x, y) in bfs_path:
+            ax.add_patch(plt.Rectangle((y, nrows-1-x), 1, 1, color="green", alpha=0.4))
+
+    # Jalur DFS (merah)
+    if dfs_path:
+        for (x, y) in dfs_path:
+            ax.add_patch(plt.Rectangle((y, nrows-1-x), 1, 1, color="red", alpha=0.4))
+
+    # Start & Goal
+    sx, sy = start
+    gx, gy = goal
+    ax.text(sy+0.5, nrows-1-sx+0.5, "S", va="center", ha="center", fontsize=14, color="blue")
+    ax.text(gy+0.5, nrows-1-gx+0.5, "G", va="center", ha="center", fontsize=14, color="blue")
+
+    ax.set_xlim(0, ncols)
+    ax.set_ylim(0, nrows)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    plt.title("Hijau = BFS (shortest path), Merah = DFS")
+    plt.show()
+
+# Panggil visualisasi
+plot_paths(grid, dfs_path, bfs_path, start, goal)

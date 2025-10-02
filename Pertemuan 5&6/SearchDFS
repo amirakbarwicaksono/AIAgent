@@ -1,0 +1,37 @@
+# Representasi grid: 0 = bebas, 1 = halangan
+grid = [
+    [0, 0, 0, 0],
+    [1, 1, 0, 1],
+    [0, 0, 0, 0],
+    [0, 1, 1, 0],
+    [0, 0, 0, 0]
+]
+
+start = (0, 0)   # posisi awal robot
+goal = (4, 3)    # posisi tujuan
+
+moves = [(-1,0), (1,0), (0,-1), (0,1)]  # atas, bawah, kiri, kanan
+
+def dfs(grid, start, goal):
+    stack = [(start, [start])]
+    visited = set()
+
+    while stack:
+        (x, y), path = stack.pop()
+
+        if (x, y) == goal:
+            return path  # solusi ditemukan
+
+        if (x, y) in visited:
+            continue
+        visited.add((x, y))
+
+        for dx, dy in moves:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]) and grid[nx][ny] == 0:
+                if (nx, ny) not in visited:
+                    stack.append(((nx, ny), path + [(nx, ny)]))
+    return None
+
+path = dfs(grid, start, goal)
+print("Jalur ditemukan DFS:", path)

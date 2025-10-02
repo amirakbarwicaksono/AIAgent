@@ -1,0 +1,101 @@
+from collections import deque
+
+#Penjelasan Grid
+#Bayangkan peta ruangan 5x4 (5 baris, 4 kolom):
+# Start →  S  .  .  .
+#           #  #  .  #
+#           .  .  .  .
+#           .  #  #  .
+#           .  .  .  G  ← Goal
+
+# S = Start (robot mulai di pojok kiri atas = (0,0))
+# G = Goal (tujuan di kanan bawah = (4,3))
+# . = jalan bebas (0)
+# = obstacle/halangan (1)
+
+# Koordinat (baris, kolom):
+
+# (0,0)  (0,1)  (0,2)  (0,3)
+# (1,0)  (1,1)  (1,2)  (1,3)
+# (2,0)  (2,1)  (2,2)  (2,3)
+# (3,0)  (3,1)  (3,2)  (3,3)
+# (4,0)  (4,1)  (4,2)  (4,3)  ← pojok kanan bawah
+
+
+# Grid: 0 = bebas, 1 = halangan
+grid = [
+    [0, 0, 0, 0],
+    [0, 1, 0, 1],
+    [0, 0, 0, 0],
+    [0, 1, 1, 0],
+    [0, 0, 0, 0]
+]
+
+# grid = [
+#     [0, 0, 0, 0, 0, 0],
+#     [1, 1, 1, 1, 1, 0],
+#     [0, 0, 0, 0, 1, 0],
+#     [0, 1, 1, 0, 1, 0],
+#     [0, 0, 0, 0, 0, 0]
+# ]
+
+# grid = [
+#     [0, 0, 0, 0, 0],
+#     [0, 1, 1, 1, 0],
+#     [0, 0, 0, 1, 0],
+#     [1, 1, 0, 1, 0],
+#     [0, 0, 0, 0, 0]
+# ]
+
+
+start = (0, 0)
+goal = (4, 3)
+moves = [(-1,0), (1,0), (0,-1), (0,1)]  # atas, bawah, kiri, kanan
+
+# -------- DFS (Depth-First Search) --------
+def dfs(grid, start, goal):
+    stack = [(start, [start])]
+    visited = set()
+
+    while stack:
+        (x, y), path = stack.pop()
+        if (x, y) == goal:
+            return path
+
+        if (x, y) in visited:
+            continue
+        visited.add((x, y))
+
+        for dx, dy in moves:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]) and grid[nx][ny] == 0:
+                if (nx, ny) not in visited:
+                    stack.append(((nx, ny), path + [(nx, ny)]))
+    return None
+
+# -------- BFS (Breadth-First Search) --------
+def bfs(grid, start, goal):
+    queue = deque([(start, [start])])
+    visited = set([start])
+
+    while queue:
+        (x, y), path = queue.popleft()
+        if (x, y) == goal:
+            return path
+
+        for dx, dy in moves:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]) and grid[nx][ny] == 0:
+                if (nx, ny) not in visited:
+                    visited.add((nx, ny))
+                    queue.append(((nx, ny), path + [(nx, ny)]))
+    return None
+
+# Jalur dengan DFS dan BFS
+dfs_path = dfs(grid, start, goal)
+bfs_path = bfs(grid, start, goal)
+
+print("Jalur DFS :", dfs_path)
+print("Panjang jalur DFS:", len(dfs_path) if dfs_path else None)
+print("Jalur BFS :", bfs_path)
+print("Panjang jalur BFS:", len(bfs_path) if bfs_path else None)

@@ -1,0 +1,33 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+
+# State space grid 3x3
+rows, cols = 3, 3
+G = nx.Graph()
+
+# Tambahkan node (setiap posisi di grid adalah state)
+for i in range(rows):
+    for j in range(cols):
+        G.add_node((i, j))
+
+# Tambahkan edge (pergerakan robot ke atas, bawah, kiri, kanan)
+moves = [(-1,0), (1,0), (0,-1), (0,1)]
+for i in range(rows):
+    for j in range(cols):
+        for dx, dy in moves:
+            ni, nj = i+dx, j+dy
+            if 0 <= ni < rows and 0 <= nj < cols:
+                G.add_edge((i, j), (ni, nj))
+
+# Posisi start dan goal
+start, goal = (0,0), (2,2)
+
+# Gambar state space
+pos = { (i,j):(j,-i) for i in range(rows) for j in range(cols) }  # posisi layout grid
+nx.draw(G, pos, with_labels=True, node_color="lightblue", node_size=800, font_size=10)
+nx.draw_networkx_nodes(G, pos, nodelist=[start], node_color="green", label="Start")
+nx.draw_networkx_nodes(G, pos, nodelist=[goal], node_color="red", label="Goal")
+
+plt.legend(["State", "Start", "Goal"])
+plt.title("State Space Representation (3x3 Grid)")
+plt.show()
