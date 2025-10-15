@@ -1,0 +1,52 @@
+from queue import PriorityQueue
+
+# Graph kota Jakarta (simplifikasi)
+graph = {
+    'Kebon Jeruk': {'Palmerah': 4, 'Slipi': 5, 'Kuningan': 9},
+    'Palmerah': {'Kebon Jeruk': 4, 'Slipi': 3, 'Tanah Abang': 5},
+    'Slipi': {'Kebon Jeruk': 5, 'Palmerah': 3, 'Tanah Abang': 4, 'Kuningan': 6},
+    'Tanah Abang': {'Slipi': 4, 'Palmerah': 5, 'Monas': 3},
+    'Monas': {'Tanah Abang': 3, 'Senen': 4, 'Kota Tua': 7},
+    'Kuningan': {'Slipi': 6, 'Setiabudi': 3, 'Senen': 7},
+    'Setiabudi': {'Kuningan': 3, 'Senen': 6},
+    'Senen': {'Monas': 4, 'Setiabudi': 6, 'Kota Tua': 6},
+    'Kota Tua': {'Monas': 7, 'Senen': 6}
+}
+
+# Heuristic (estimasi jarak ke Kota Tua)
+h = {
+    'Kebon Jeruk': 9, 'Palmerah': 8, 'Slipi': 7, 'Tanah Abang': 6,
+    'Monas': 4, 'Kuningan': 9, 'Setiabudi': 8, 'Senen': 5, 'Kota Tua': 0
+}
+
+def a_star(start, goal):
+    pq = PriorityQueue()
+    pq.put((0, start))
+    g = {start: 0}
+    parent = {start: None}
+
+    while not pq.empty():
+        f, current = pq.get()
+        if current == goal:
+            break
+
+        for neighbor, cost in graph[current].items():
+            tentative_g = g[current] + cost
+            f_score = tentative_g + h[neighbor]
+            if neighbor not in g or tentative_g < g[neighbor]:
+                g[neighbor] = tentative_g
+                pq.put((f_score, neighbor))
+                parent[neighbor] = current
+
+    # Reconstruct path
+    path = []
+    node = goal
+    while node:
+        path.append(node)
+        node = parent[node]
+    path.reverse()
+    return path, g[goal]
+
+path, total_cost = a_star('Kebon Jeruk', 'Kota Tua')
+print("Rute terbaik:", " → ".join(path))
+print("Total jarak:", total_cost, "km")

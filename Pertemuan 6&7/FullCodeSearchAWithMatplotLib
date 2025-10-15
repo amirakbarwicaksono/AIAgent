@@ -1,0 +1,203 @@
+# ===============================================================
+# Simulasi Pencarian Rute AI di Kota Jakarta (A*, Dijkstra)
+# Dengan Visualisasi Graf dan Penyesuaian Kondisi Aktual
+# ---------------------------------------------------------------
+# Referensi: Russell & Norvig (2021), "AI: A Modern Approach"
+# Adaptasi konteks: Kota Jakarta, Indonesia
+# ===============================================================
+
+from queue import PriorityQueue
+import heapq
+import networkx as nx
+import matplotlib.pyplot as plt
+
+# -------------------------------
+# DATA PETA SIMULASI KOTA JAKARTA
+# -------------------------------
+graph = {
+    'Kebon Jeruk': {'Palmerah': 4, 'Slipi': 5, 'Kuningan': 9},
+    'Palmerah': {'Kebon Jeruk': 4, 'Slipi': 3, 'Tanah Abang': 5},
+    'Slipi': {'Kebon Jeruk': 5, 'Palmerah': 3, 'Tanah Abang': 4, 'Kuningan': 6},
+    'Tanah Abang': {'Slipi': 4, 'Palmerah': 5, 'Monas': 3},
+    'Monas': {'Tanah Abang': 3, 'Senen': 4, 'Kota Tua': 7},
+    'Kuningan': {'Slipi': 6, 'Setiabudi': 3, 'Senen': 7},
+    'Setiabudi': {'Kuningan': 3, 'Senen': 6},
+    'Senen': {'Monas': 4, 'Setiabudi': 6, 'Kota Tua': 6},
+    'Kota Tua': {'Monas': 7, 'Senen': 6}
+}
+
+# Heuristic (estimasi jarak ke Kota Tua)
+heuristic = {
+    'Kebon Jeruk': 9, 'Palmerah': 8, 'Slipi': 7, 'Tanah Abang': 6,
+    'Monas': 4, 'Kuningan': 9, 'Setiabudi': 8, 'Senen': 5, 'Kota Tua': 0
+}
+#untuk melihat perbedaan antara algoritma A* dan Dijkstra ubah Monas jadi 1 (seakan dekat),
+# dan Kuningan menjadi 20 (seakan jauh),
+# sehingga A* yang mengandalkan heuristik menjadi kurang optimal
+
+# ------------------------------------
+# FUNGSI: A* SEARCH
+# ------------------------------------
+def a_star(graph, start, goal, h):
+    pq = PriorityQueue()
+    pq.put((0, start))
+    g = {start: 0}
+    parent = {start: None}
+
+    while not pq.empty():
+        f, current = pq.get()
+        if current == goal:
+            break
+
+        for neighbor, cost in graph.get(current, {}).items():
+            tentative_g = g[current] + cost
+            f_score = tentative_g + h.get(neighbor, 999)
+            if neighbor not in g or tentative_g < g[neighbor]:
+                g[neighbor] = tentative_g
+                pq.put((f_score, neighbor))
+                parent[neighbor] = current
+
+    # Rekonstruksi jalur
+    path = []
+    node = goal
+    while node:
+        path.append(node)
+        node = parent.get(node)
+    path.reverse()
+    return path, g.get(goal, float('inf'))
+
+# ------------------------------------
+# FUNGSI: DIJKSTRA SEARCH
+# ------------------------------------
+def dijkstra(graph, start, goal):
+    queue = [(0, start)]
+    dist = {start: 0}
+    parent = {start: None}
+
+    while queue:
+        cost, node = heapq.heappop(queue)
+        if node == goal:
+            break
+        for neighbor, weight in graph.get(node, {}).items():
+            new_cost = cost + weight
+            if neighbor not in dist or new_cost < dist[neighbor]:
+                dist[neighbor] = new_cost
+                heapq.heappush(queue, (new_cost, neighbor))
+                parent[neighbor] = node
+
+    path = []
+    n = goal
+    while n:
+        path.append(n)
+        n = parent.get(n)
+    path.reverse()
+    return path, dist.get(goal, float('inf'))
+
+# ------------------------------------
+# VISUALISASI GRAF DENGAN NETWORKX
+# ------------------------------------
+def visualisasi_graph(graph, path_a=None, path_d=None, kondisi=None):
+    G = nx.Graph()
+    for node, edges in graph.items():
+        for neighbor, weight in edges.items():
+            G.add_edge(node, neighbor, weight=weight)
+
+    pos = nx.spring_layout(G, seed=42)
+    plt.figure(figsize=(10, 7))
+    nx.draw(G, pos, with_labels=True, node_size=1500,
+            node_color='lightblue', font_size=9, font_weight='bold')
+    labels = nx.get_edge_attributes(G, 'weight')
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+
+    # highlight rute A*
+    if path_a:
+        edges_a = list(zip(path_a, path_a[1:]))
+        nx.draw_networkx_edges(G, pos, edgelist=edges_a,
+                               edge_color='red', width=3, label='A*')
+
+    # highlight rute Dijkstra
+    if path_d:
+        edges_d = list(zip(path_d, path_d[1:]))
+        nx.draw_networkx_edges(G, pos, edgelist=edges_d,
+                               edge_color='green', width=2, style='dashed', label='Dijkstra')
+
+    if kondisi:
+        plt.title(f"Peta Jakarta (Kondisi: {kondisi})", fontsize=14, fontweight='bold')
+    else:
+        plt.title("Peta Simulasi Rute AI di Kota Jakarta", fontsize=14, fontweight='bold')
+
+    plt.legend()
+    plt.show()
+
+# ------------------------------------
+# UTILITAS: INPUT KONDISI AKTUAL
+# ------------------------------------
+def kondisi_aktual():
+    print("Masukkan kondisi jalan (misal: Slipi-Tanah Abang, banjir/tutup):")
+    jalan = input("Nama ruas jalan (format: Node1-Node2): ").strip()
+    kondisi = input("Kondisi (banjir/tutup): ").strip().lower()
+
+    if '-' not in jalan:
+        print("❌ Format salah. Gunakan format Node1-Node2.")
+        return None
+
+    node1, node2 = jalan.split('-')
+    node1, node2 = node1.strip(), node2.strip()
+
+    if node1 in graph and node2 in graph[node1]:
+        if kondisi in ['banjir', 'tutup']:
+            graph[node1].pop(node2, None)
+            graph[node2].pop(node1, None)
+            print(f"⚠️  Ruas {node1} ⇄ {node2} dihapus dari peta (kondisi: {kondisi}).")
+
+            penalty = 4 if kondisi == 'banjir' else 8
+            heuristic[node1] = heuristic.get(node1, 9) + penalty
+            heuristic[node2] = heuristic.get(node2, 9) + penalty
+            print(f"🧭 Heuristik diperbarui: {node1}={heuristic[node1]}, {node2}={heuristic[node2]}")
+            return f"{node1}-{node2} ({kondisi})"
+    print("❌ Ruas jalan tidak ditemukan atau format salah.")
+    return None
+
+# ------------------------------------
+# PROGRAM UTAMA
+# ------------------------------------
+def main():
+    print("\n=== SIMULASI RUTE AI DI KOTA JAKARTA ===")
+    for node, edges in graph.items():
+        print(f"{node:12} -> {edges}")
+
+    start = input("\nMasukkan titik awal (contoh: Kebon Jeruk): ").strip()
+    goal = input("Masukkan tujuan (contoh: Kota Tua): ").strip()
+    if start not in graph or goal not in graph:
+        print("❌ Titik tidak valid.")
+        return
+
+    ubah = input("Apakah ada kondisi aktual (banjir/jalan tutup)? (y/n): ").lower()
+    kondisi_info = None
+    if ubah == 'y':
+        kondisi_info = kondisi_aktual()
+
+    print("\n🔍 Jalankan algoritma A* ...")
+    path_a, cost_a = a_star(graph, start, goal, heuristic)
+    print(f"A* Path: {' → '.join(path_a)} | Total jarak: {cost_a} km")
+
+    print("\n🔍 Jalankan algoritma Dijkstra ...")
+    path_d, cost_d = dijkstra(graph, start, goal)
+    print(f"Dijkstra Path: {' → '.join(path_d)} | Total jarak: {cost_d} km")
+
+    print("\n📊 Analisis Perbandingan:")
+    if cost_a < cost_d:
+        print("✅ A* menemukan jalur lebih efisien karena mempertimbangkan heuristik.")
+    elif cost_a > cost_d:
+        print("ℹ️  Dijkstra memberikan hasil lebih pendek karena heuristik A* kurang akurat.")
+    else:
+        print("⚖️  Keduanya menghasilkan jalur optimal yang sama.")
+
+    # tampilkan visualisasi
+    visualisasi_graph(graph, path_a, path_d, kondisi_info)
+
+    print("\n=== Simulasi selesai ===")
+
+# Jalankan program
+if __name__ == "__main__":
+    main()

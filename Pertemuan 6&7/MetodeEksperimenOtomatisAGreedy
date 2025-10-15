@@ -1,0 +1,193 @@
+# ===============================================================
+# SIMULASI PERBANDINGAN OTOMATIS: A*, DIJKSTRA, GREEDY
+# ---------------------------------------------------------------
+# Tema: Pencarian Rute di Kota Jakarta
+# ===============================================================
+
+from queue import PriorityQueue
+import heapq
+import networkx as nx
+import matplotlib.pyplot as plt
+import time
+import copy
+
+# -------------------------------
+# DATA PETA SIMULASI
+# -------------------------------
+graph = {
+    'Kebon Jeruk': {'Palmerah': 4, 'Slipi': 5, 'Kuningan': 9},
+    'Palmerah': {'Kebon Jeruk': 4, 'Slipi': 3, 'Tanah Abang': 5},
+    'Slipi': {'Kebon Jeruk': 5, 'Palmerah': 3, 'Tanah Abang': 4, 'Kuningan': 6},
+    'Tanah Abang': {'Slipi': 4, 'Palmerah': 5, 'Monas': 3},
+    'Monas': {'Tanah Abang': 3, 'Senen': 4, 'Kota Tua': 7},
+    'Kuningan': {'Slipi': 6, 'Setiabudi': 3, 'Senen': 7},
+    'Setiabudi': {'Kuningan': 3, 'Senen': 6},
+    'Senen': {'Monas': 4, 'Setiabudi': 6, 'Kota Tua': 6},
+    'Kota Tua': {'Monas': 7, 'Senen': 6}
+}
+
+# Heuristik dasar (jarak estimasi ke Kota Tua)
+heuristic_base = {
+    'Kebon Jeruk': 9, 'Palmerah': 8, 'Slipi': 7, 'Tanah Abang': 6,
+    'Monas': 4, 'Kuningan': 9, 'Setiabudi': 8, 'Senen': 5, 'Kota Tua': 0
+}
+
+# ------------------------------------
+# A* SEARCH
+# ------------------------------------
+def a_star(graph, start, goal, h):
+    pq = PriorityQueue()
+    pq.put((0, start))
+    g = {start: 0}
+    parent = {start: None}
+
+    while not pq.empty():
+        f, current = pq.get()
+        if current == goal:
+            break
+        for neighbor, cost in graph.get(current, {}).items():
+            tentative_g = g[current] + cost
+            f_score = tentative_g + h.get(neighbor, 999)
+            if neighbor not in g or tentative_g < g[neighbor]:
+                g[neighbor] = tentative_g
+                pq.put((f_score, neighbor))
+                parent[neighbor] = current
+
+    path = []
+    node = goal
+    while node:
+        path.append(node)
+        node = parent.get(node)
+    path.reverse()
+    return path, g.get(goal, float('inf'))
+
+# ------------------------------------
+# DIJKSTRA SEARCH
+# ------------------------------------
+def dijkstra(graph, start, goal):
+    queue = [(0, start)]
+    dist = {start: 0}
+    parent = {start: None}
+    while queue:
+        cost, node = heapq.heappop(queue)
+        if node == goal:
+            break
+        for neighbor, weight in graph.get(node, {}).items():
+            new_cost = cost + weight
+            if neighbor not in dist or new_cost < dist[neighbor]:
+                dist[neighbor] = new_cost
+                heapq.heappush(queue, (new_cost, neighbor))
+                parent[neighbor] = node
+    path = []
+    n = goal
+    while n:
+        path.append(n)
+        n = parent.get(n)
+    path.reverse()
+    return path, dist.get(goal, float('inf'))
+
+# ------------------------------------
+# GREEDY BEST-FIRST SEARCH
+# ------------------------------------
+def greedy_best_first(graph, start, goal, h):
+    pq = PriorityQueue()
+    pq.put((h[start], start))
+    parent = {start: None}
+    visited = set()
+
+    while not pq.empty():
+        _, current = pq.get()
+        if current == goal:
+            break
+        visited.add(current)
+        for neighbor in graph.get(current, {}):
+            if neighbor not in visited:
+                pq.put((h.get(neighbor, 999), neighbor))
+                if neighbor not in parent:
+                    parent[neighbor] = current
+
+    path = []
+    node = goal
+    while node:
+        path.append(node)
+        node = parent.get(node)
+    path.reverse()
+    total_cost = 0
+    for i in range(len(path) - 1):
+        total_cost += graph[path[i]][path[i + 1]]
+    return path, total_cost
+
+# ------------------------------------
+# VISUALISASI
+# ------------------------------------
+def visualisasi_graph(graph, hasil):
+    G = nx.Graph()
+    for node, edges in graph.items():
+        for neighbor, weight in edges.items():
+            G.add_edge(node, neighbor, weight=weight)
+    pos = nx.spring_layout(G, seed=42)
+    plt.figure(figsize=(10, 7))
+    nx.draw(G, pos, with_labels=True, node_size=1500,
+            node_color='lightyellow', font_size=9, font_weight='bold')
+    labels = nx.get_edge_attributes(G, 'weight')
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+
+    warna = {'A*': 'red', 'Dijkstra': 'green', 'Greedy': 'blue'}
+    gaya = {'A*': 'solid', 'Dijkstra': 'dashed', 'Greedy': 'dotted'}
+    for algo, (path, _, _) in hasil.items():
+        edges = list(zip(path, path[1:]))
+        nx.draw_networkx_edges(G, pos, edgelist=edges,
+                               edge_color=warna[algo], width=3, style=gaya[algo], label=algo)
+
+    plt.title("Perbandingan Jalur (A*, Dijkstra, Greedy)", fontsize=14, fontweight='bold')
+    plt.legend()
+    plt.show()
+
+# ------------------------------------
+# EKSPERIMEN OTOMATIS
+# ------------------------------------
+def eksperimen_otomatis():
+    start, goal = "Kebon Jeruk", "Kota Tua"
+    print(f"\n=== EKSPERIMEN OTOMATIS ===")
+    print(f"Rute: {start} → {goal}")
+    print("Menguji 3 variasi heuristik...\n")
+
+    variasi_h = {
+        "Normal": heuristic_base,
+        "Optimis": {k: v * 0.5 for k, v in heuristic_base.items()},
+        "Pesimis": {k: v * 1.5 for k, v in heuristic_base.items()}
+    }
+
+    hasil_total = []
+
+    for nama, h_var in variasi_h.items():
+        print(f"📘 VARIASI HEURISTIK: {nama}")
+        hasil = {}
+        for algo in ["A*", "Dijkstra", "Greedy"]:
+            start_time = time.time()
+            if algo == "A*":
+                path, cost = a_star(graph, start, goal, h_var)
+            elif algo == "Dijkstra":
+                path, cost = dijkstra(graph, start, goal)
+            else:
+                path, cost = greedy_best_first(graph, start, goal, h_var)
+            waktu = time.time() - start_time
+            hasil[algo] = (path, cost, waktu)
+            print(f"  {algo:<10}: {' → '.join(path)} | Cost: {cost} | Time: {waktu:.5f}s")
+        hasil_total.append((nama, hasil))
+        print("-" * 70)
+
+    print("\n=== HASIL PERBANDINGAN RINGKAS ===")
+    for nama, hasil in hasil_total:
+        print(f"\n>> Heuristik {nama}")
+        for algo, (path, cost, waktu) in hasil.items():
+            print(f"{algo:<10}: Cost={cost:>3} | Time={waktu:.5f}s")
+
+    # Visualisasi hanya untuk heuristik normal
+    visualisasi_graph(graph, hasil_total[0][1])
+
+# ------------------------------------
+# MAIN PROGRAM
+# ------------------------------------
+if __name__ == "__main__":
+    eksperimen_otomatis()

@@ -1,0 +1,168 @@
+# ===============================================================
+# Simulasi Pencarian Rute AI di Kota Jakarta (A* dan Dijkstra)
+# Dengan Penyesuaian Kondisi Aktual (misal: banjir, jalan tertutup)
+# ---------------------------------------------------------------
+# Referensi: Russell & Norvig (2021), AI: A Modern Approach
+# Adaptasi konteks: Kota Jakarta, Indonesia
+# ===============================================================
+
+from queue import PriorityQueue
+import heapq
+
+# -------------------------------
+# DATA PETA SIMULASI KOTA JAKARTA
+# -------------------------------
+graph = {
+    'Kebon Jeruk': {'Palmerah': 4, 'Slipi': 5, 'Kuningan': 9},
+    'Palmerah': {'Kebon Jeruk': 4, 'Slipi': 3, 'Tanah Abang': 5},
+    'Slipi': {'Kebon Jeruk': 5, 'Palmerah': 3, 'Tanah Abang': 4, 'Kuningan': 6},
+    'Tanah Abang': {'Slipi': 4, 'Palmerah': 5, 'Monas': 3},
+    'Monas': {'Tanah Abang': 3, 'Senen': 4, 'Kota Tua': 7},
+    'Kuningan': {'Slipi': 6, 'Setiabudi': 3, 'Senen': 7},
+    'Setiabudi': {'Kuningan': 3, 'Senen': 6},
+    'Senen': {'Monas': 4, 'Setiabudi': 6, 'Kota Tua': 6},
+    'Kota Tua': {'Monas': 7, 'Senen': 6}
+}
+
+# Heuristic (estimasi jarak ke Kota Tua)
+heuristic = {
+    'Kebon Jeruk': 9, 'Palmerah': 8, 'Slipi': 7, 'Tanah Abang': 6,
+    'Monas': 4, 'Kuningan': 9, 'Setiabudi': 8, 'Senen': 5, 'Kota Tua': 0
+}
+
+# ------------------------------------
+# FUNGSI: A* SEARCH
+# ------------------------------------
+def a_star(graph, start, goal, h):
+    pq = PriorityQueue()
+    pq.put((0, start))
+    g = {start: 0}
+    parent = {start: None}
+
+    while not pq.empty():
+        f, current = pq.get()
+        if current == goal:
+            break
+
+        for neighbor, cost in graph.get(current, {}).items():
+            tentative_g = g[current] + cost
+            f_score = tentative_g + h.get(neighbor, 999)
+            if neighbor not in g or tentative_g < g[neighbor]:
+                g[neighbor] = tentative_g
+                pq.put((f_score, neighbor))
+                parent[neighbor] = current
+
+    # Rekonstruksi jalur
+    path = []
+    node = goal
+    while node:
+        path.append(node)
+        node = parent.get(node)
+    path.reverse()
+    return path, g.get(goal, float('inf'))
+
+# ------------------------------------
+# FUNGSI: DIJKSTRA SEARCH
+# ------------------------------------
+def dijkstra(graph, start, goal):
+    queue = [(0, start)]
+    dist = {start: 0}
+    parent = {start: None}
+
+    while queue:
+        cost, node = heapq.heappop(queue)
+        if node == goal:
+            break
+        for neighbor, weight in graph.get(node, {}).items():
+            new_cost = cost + weight
+            if neighbor not in dist or new_cost < dist[neighbor]:
+                dist[neighbor] = new_cost
+                heapq.heappush(queue, (new_cost, neighbor))
+                parent[neighbor] = node
+
+    path = []
+    n = goal
+    while n:
+        path.append(n)
+        n = parent.get(n)
+    path.reverse()
+    return path, dist.get(goal, float('inf'))
+
+# ------------------------------------
+# UTILITAS: TAMPILKAN PETA DAN KONDISI USER
+# ------------------------------------
+def tampilkan_peta():
+    print("\n=== PETA SIMULASI JAKARTA ===")
+    for node, edges in graph.items():
+        print(f"{node:12} -> {edges}")
+    print("==============================\n")
+
+def kondisi_aktual():
+    print("Masukkan kondisi jalan (misal: Slipi-Tanah Abang, banjir/tutup):")
+    jalan = input("Nama ruas jalan (format: Node1-Node2, contoh: Slipi-Tanah Abang): ").strip()
+    kondisi = input("Kondisi (banjir/tutup): ").strip().lower()
+
+    if '-' not in jalan:
+        print("❌ Format salah. Gunakan format Node1-Node2.")
+        return
+
+    node1, node2 = jalan.split('-')
+    node1, node2 = node1.strip(), node2.strip()
+
+    if node1 in graph and node2 in graph[node1]:
+        if kondisi in ['banjir', 'tutup']:
+            # hapus ruas
+            graph[node1].pop(node2, None)
+            graph[node2].pop(node1, None)
+            print(f"⚠️  Ruas {node1} ⇄ {node2} dihapus dari peta (kondisi: {kondisi}).")
+
+            # tambahkan penalti heuristik agar A* menghindari node terkait
+            penalty = 4 if kondisi == 'banjir' else 8
+            heuristic[node1] = heuristic.get(node1, 9) + penalty
+            heuristic[node2] = heuristic.get(node2, 9) + penalty
+            print(f"🧭 Heuristik diperbarui: {node1}={heuristic[node1]}, {node2}={heuristic[node2]}")
+        else:
+            print("⚠️  Kondisi tidak dikenali, abaikan perubahan.")
+    else:
+        print("❌ Ruas jalan tidak ditemukan dalam peta.")
+
+# ------------------------------------
+# PROGRAM UTAMA
+# ------------------------------------
+def main():
+    print("\n=== SIMULASI RUTE AI DI KOTA JAKARTA ===")
+    tampilkan_peta()
+
+    start = input("Masukkan titik awal (contoh: Kebon Jeruk): ").strip()
+    goal = input("Masukkan tujuan (contoh: Kota Tua): ").strip()
+
+    if start not in graph or goal not in graph:
+        print("❌ Titik tidak valid.")
+        return
+
+    ubah = input("Apakah ada kondisi aktual (banjir/jalan tutup)? (y/n): ").lower()
+    if ubah == 'y':
+        kondisi_aktual()
+
+    print("\n🔍 Jalankan algoritma A* ...")
+    path_a, cost_a = a_star(graph, start, goal, heuristic)
+    print(f"A* Path: {' → '.join(path_a)} | Total jarak: {cost_a} km")
+
+    print("\n🔍 Jalankan algoritma Dijkstra ...")
+    path_d, cost_d = dijkstra(graph, start, goal)
+    print(f"Dijkstra Path: {' → '.join(path_d)} | Total jarak: {cost_d} km")
+
+    # Analisis singkat
+    print("\n📊 Analisis Perbandingan:")
+    if cost_a < cost_d:
+        print("✅ A* menemukan jalur lebih efisien karena mempertimbangkan heuristik.")
+    elif cost_a > cost_d:
+        print("ℹ️  Dijkstra memberikan hasil lebih pendek karena heuristik A* kurang akurat.")
+    else:
+        print("⚖️  Keduanya menghasilkan jalur optimal yang sama.")
+
+    print("\n=== Simulasi selesai ===")
+
+# Jalankan program
+if __name__ == "__main__":
+    main()

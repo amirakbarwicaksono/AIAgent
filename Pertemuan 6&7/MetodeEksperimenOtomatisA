@@ -1,0 +1,172 @@
+# ===============================================================
+# Simulasi Pencarian Rute AI di Kota Jakarta (A* dan Dijkstra)
+# Dengan Penyesuaian Kondisi Aktual + Mode Eksperimen Heuristik
+# ---------------------------------------------------------------
+# Referensi: Russell & Norvig (2021), AI: A Modern Approach
+# Adaptasi: Kota Jakarta, Indonesia
+# ===============================================================
+
+from queue import PriorityQueue
+import heapq
+import itertools
+
+# -------------------------------
+# DATA PETA SIMULASI KOTA JAKARTA
+# -------------------------------
+base_graph = {
+    'Kebon Jeruk': {'Palmerah': 4, 'Slipi': 5, 'Kuningan': 9},
+    'Palmerah': {'Kebon Jeruk': 4, 'Slipi': 3, 'Tanah Abang': 5},
+    'Slipi': {'Kebon Jeruk': 5, 'Palmerah': 3, 'Tanah Abang': 4, 'Kuningan': 6},
+    'Tanah Abang': {'Slipi': 4, 'Palmerah': 5, 'Monas': 3},
+    'Monas': {'Tanah Abang': 3, 'Senen': 4, 'Kota Tua': 7},
+    'Kuningan': {'Slipi': 6, 'Setiabudi': 3, 'Senen': 7},
+    'Setiabudi': {'Kuningan': 3, 'Senen': 6},
+    'Senen': {'Monas': 4, 'Setiabudi': 6, 'Kota Tua': 6},
+    'Kota Tua': {'Monas': 7, 'Senen': 6}
+}
+
+# Heuristic dasar (estimasi jarak ke Kota Tua)
+base_heuristic = {
+    'Kebon Jeruk': 9, 'Palmerah': 8, 'Slipi': 7, 'Tanah Abang': 6,
+    'Monas': 4, 'Kuningan': 9, 'Setiabudi': 8, 'Senen': 5, 'Kota Tua': 0
+}
+
+# ------------------------------------
+# FUNGSI: A* SEARCH
+# ------------------------------------
+def a_star(graph, start, goal, h):
+    pq = PriorityQueue()
+    pq.put((0, start))
+    g = {start: 0}
+    parent = {start: None}
+
+    while not pq.empty():
+        f, current = pq.get()
+        if current == goal:
+            break
+        for neighbor, cost in graph[current].items():
+            tentative_g = g[current] + cost
+            f_score = tentative_g + h.get(neighbor, float('inf'))
+            if neighbor not in g or tentative_g < g[neighbor]:
+                g[neighbor] = tentative_g
+                pq.put((f_score, neighbor))
+                parent[neighbor] = current
+
+    # Rekonstruksi jalur
+    path = []
+    node = goal
+    while node:
+        path.append(node)
+        node = parent.get(node)
+    path.reverse()
+    return path, g.get(goal, float('inf'))
+
+# ------------------------------------
+# FUNGSI: DIJKSTRA SEARCH
+# ------------------------------------
+def dijkstra(graph, start, goal):
+    queue = [(0, start)]
+    dist = {start: 0}
+    parent = {start: None}
+
+    while queue:
+        cost, node = heapq.heappop(queue)
+        if node == goal:
+            break
+        for neighbor, weight in graph[node].items():
+            new_cost = cost + weight
+            if neighbor not in dist or new_cost < dist[neighbor]:
+                dist[neighbor] = new_cost
+                heapq.heappush(queue, (new_cost, neighbor))
+                parent[neighbor] = node
+
+    path = []
+    n = goal
+    while n:
+        path.append(n)
+        n = parent.get(n)
+    path.reverse()
+    return path, dist.get(goal, float('inf'))
+
+# ------------------------------------
+# UTILITAS: CETAK PETA
+# ------------------------------------
+def tampilkan_peta(graph):
+    print("\n=== PETA SIMULASI JAKARTA ===")
+    for node, edges in graph.items():
+        print(f"{node:12} -> {edges}")
+    print("==============================\n")
+
+# ------------------------------------
+# MODE EKSPERIMEN: CARI KASUS BERBEDA
+# ------------------------------------
+def eksperimen_perbandingan():
+    print("\n=== MODE EKSPERIMEN PERBANDINGAN A* vs DIJKSTRA ===")
+
+    start = "Kebon Jeruk"
+    goal = "Kota Tua"
+
+    # Coba berbagai kombinasi heuristic ekstrem
+    nodes = list(base_heuristic.keys())
+    interesting_cases = []
+
+    for test_node in ["Monas", "Kuningan", "Slipi"]:
+        for val in [0, 5, 10, 20]:
+            h = base_heuristic.copy()
+            h[test_node] = val
+
+            path_a, cost_a = a_star(base_graph, start, goal, h)
+            path_d, cost_d = dijkstra(base_graph, start, goal)
+
+            if path_a != path_d:
+                interesting_cases.append((test_node, val, path_a, cost_a, path_d, cost_d))
+
+    if interesting_cases:
+        print("\n🧭 Ditemukan kasus di mana hasil berbeda:")
+        for test_node, val, path_a, cost_a, path_d, cost_d in interesting_cases:
+            print(f"\n➡️ Node diuji: {test_node}, Heuristic = {val}")
+            print(f"A* Path: {' → '.join(path_a)} | Jarak = {cost_a}")
+            print(f"Dijkstra Path: {' → '.join(path_d)} | Jarak = {cost_d}")
+    else:
+        print("\n⚖️  Tidak ditemukan kasus berbeda dengan kombinasi heuristik yang diuji.")
+        print("Coba ubah struktur peta atau buat heuristic lebih ekstrem.")
+
+# ------------------------------------
+# PROGRAM UTAMA
+# ------------------------------------
+def main():
+    print("\n=== SIMULASI RUTE AI DI KOTA JAKARTA ===")
+    tampilkan_peta(base_graph)
+
+    start = input("Masukkan titik awal (contoh: Kebon Jeruk): ").strip()
+    goal = input("Masukkan tujuan (contoh: Kota Tua): ").strip()
+
+    if start not in base_graph or goal not in base_graph:
+        print("❌ Titik tidak valid.")
+        return
+
+    mode = input("Jalankan mode eksperimen otomatis? (y/n): ").lower()
+    if mode == 'y':
+        eksperimen_perbandingan()
+        return
+
+    # Jalankan mode normal
+    print("\n🔍 Jalankan algoritma A* ...")
+    path_a, cost_a = a_star(base_graph, start, goal, base_heuristic)
+    print(f"A* Path: {' → '.join(path_a)} | Total jarak: {cost_a} km")
+
+    print("\n🔍 Jalankan algoritma Dijkstra ...")
+    path_d, cost_d = dijkstra(base_graph, start, goal)
+    print(f"Dijkstra Path: {' → '.join(path_d)} | Total jarak: {cost_d} km")
+
+    print("\n📊 Analisis Perbandingan:")
+    if path_a == path_d:
+        print("⚖️  Keduanya menghasilkan jalur optimal yang sama.")
+    else:
+        print("✨ A* dan Dijkstra menghasilkan rute berbeda karena efek heuristik.")
+
+    print("\n=== Simulasi selesai ===")
+
+# Jalankan program
+if __name__ == "__main__":
+    main()
