@@ -1,0 +1,94 @@
+# ==========================================================
+# AI Traffic Logger Jakarta
+# Simulasi Dataset dan DataFrame Python
+# ----------------------------------------------------------
+# Mahasiswa dapat memasukkan data simulasi aktual
+# seperti kondisi jalan, cuaca, dan hasil algoritma pencarian rute.
+# ==========================================================
+
+import pandas as pd
+from datetime import datetime
+import os
+
+# Nama file dataset
+DATA_FILE = "dataset_rute_jakarta.csv"
+
+# Jika file belum ada, buat DataFrame kosong dengan struktur kolom
+if not os.path.exists(DATA_FILE):
+    df = pd.DataFrame(columns=[
+        "Tanggal", "Algoritma", "Start", "Goal",
+        "Total_Jarak_km", "Estimasi_Waktu_menit", 
+        "Kondisi_Jalan", "Cuaca", "Waktu_Eksekusi"
+    ])
+    df.to_csv(DATA_FILE, index=False)
+    print(" File dataset baru dibuat:", DATA_FILE)
+else:
+    df = pd.read_csv(DATA_FILE)
+    print(" File dataset ditemukan dan dimuat:", DATA_FILE)
+
+print("\n=== AI Traffic Logger Jakarta ===")
+print("Simulasi dataset perjalanan rute di Jakarta\n")
+
+# Fungsi input data baru
+def input_data():
+    tanggal = datetime.now().strftime("%Y-%m-%d")
+    algoritma = input("Masukkan algoritma (A*, Dijkstra, Greedy): ").strip()
+    start = input("Masukkan lokasi awal: ").title()
+    goal = input("Masukkan lokasi tujuan: ").title()
+    jarak = float(input("Masukkan total jarak (km): "))
+    kondisi = input("Masukkan kondisi jalan (Normal/Banjir/Macet): ").title()
+    cuaca = input("Masukkan cuaca (Cerah/Hujan): ").title()
+    
+    # Waktu dasar = jarak * 2 menit/km
+    waktu = jarak * 2
+
+    # Penyesuaian berdasarkan kondisi dan cuaca
+    if "Banjir" in kondisi:
+        waktu *= 1.5
+    elif "Macet" in kondisi:
+        waktu *= 1.3
+    if "Hujan" in cuaca:
+        waktu *= 1.2
+
+    waktu = round(waktu, 2)
+
+    data = {
+        "Tanggal": tanggal,
+        "Algoritma": algoritma,
+        "Start": start,
+        "Goal": goal,
+        "Total_Jarak_km": jarak,
+        "Estimasi_Waktu_menit": waktu,
+        "Kondisi_Jalan": kondisi,
+        "Cuaca": cuaca,
+        "Waktu_Eksekusi": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    return data
+
+# Loop input interaktif
+while True:
+    tambah = input("\n➕ Tambahkan data baru? (y/n): ").lower()
+    if tambah == 'y':
+        new_data = input_data()
+        df = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
+        df.to_csv(DATA_FILE, index=False)
+        print("\n Data berhasil ditambahkan ke dataset.")
+    else:
+        break
+
+# Menampilkan ringkasan dataset
+print("\n=== Ringkasan Dataset Terkini ===")
+print(df.tail(10))
+
+# Analisis sederhana
+print("\n Rata-rata Estimasi Waktu per Algoritma:")
+print(df.groupby("Algoritma")["Estimasi_Waktu_menit"].mean())
+
+print("\n Kondisi Jalan yang Paling Sering Terjadi:")
+print(df["Kondisi_Jalan"].value_counts())
+
+print("\n Kondisi Cuaca:")
+print(df["Cuaca"].value_counts())
+
+print("\n Dataset tersimpan dan siap digunakan untuk analisis machine learning.")

@@ -1,0 +1,9 @@
+Algoritma,Start,Goal,Total_Jarak,Estimasi_Waktu,Kondisi,Waktu_Eksekusi,Tanggal,Total_Jarak_km,Estimasi_Waktu_menit,Kondisi_Jalan,Cuaca
+A*,Kebon Jeruk,Kota Tua,19.0,30.0,Normal,0.00014,2025-10-16 14:21:41,19.0,30.0,Normal,Cerah
+Dijkstra,Kebon Jeruk,Kota Tua,19.0,33.0,Normal,0.00005,2025-10-16 14:21:41,19.0,33.0,Normal,Cerah
+A*,Kebon Jeruk,Kota Tua,21.0,40.0,Banjir di Slipi,0.00020,2025-10-16 14:21:41,21.0,40.0,Banjir,Hujan
+Dijkstra,Kebon Jeruk,Kota Tua,21.0,41.0,Banjir di Slipi,0.00003,2025-10-16 14:21:41,21.0,41.0,Banjir,Hujan
+A*,Kebon Jeruk,Tanah Abang,7.0,25.2,Banjir,0.00012,2025-10-16 14:38:17,7.0,25.2,Banjir,Hujan
+A*,Kebon Jeruk,Kota Tua,7.0,25.2,Banjir,0.00015,2025-10-16 14:39:02,7.0,25.2,Banjir,Hujan
+Greedy,Slipi,Monas,4.0,8.0,Normal,0.00017,2025-10-16 14:47:36,4.0,8.0,Normal,Cerah
+Dijkstra,Palmerah,Kota Tua,19.0,38.0,Normal,0.00002,2025-10-16 14:47:59,19.0,38.0,Normal,Cerah
